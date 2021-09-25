@@ -17,6 +17,17 @@ const usersBucket = []
 
 const port = process.env.PORT || 8000
 
+//used only to run the site ---------------------------
+app.use( express.static( path.join( __dirname, 'public' ) ) )
+app.set( 'views', path.join( __dirname, 'public' ) )
+app.engine( 'html', require('ejs').renderFile )
+app.set( 'view engine', 'html' )
+app.use('/', (req, res) => {
+  res.render('index.html')
+})
+//-------------------------------------------------------------
+
+
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
