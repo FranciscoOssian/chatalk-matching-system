@@ -46,7 +46,7 @@ io.on('connection', (socket) => {
       }
     )
 
-    if (usersBucket.length >= 2) {
+    if (usersBucket.length >= 1) {
       user_one = usersBucket.pop()
       user_two = usersBucket.pop()
 
