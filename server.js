@@ -46,7 +46,7 @@ io.on('connection', (socket) => {
       }
     )
 
-    if (usersBucket.length >= 1) {
+    if (usersBucket.length >= 2) {
       user_one = usersBucket.shift()
       user_two = usersBucket.shift()
 
