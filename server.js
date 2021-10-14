@@ -35,7 +35,7 @@ app.get('/', (req, res) => {
 
 io.on('connection', (socket) => {
 
-  console.log('a user connected');
+  console.log('a user connected', socket.id);
 
   socket.once('add_user', (user) => {
 
@@ -47,8 +47,8 @@ io.on('connection', (socket) => {
     )
 
     if (usersBucket.length >= 2) {
-      user_one = usersBucket.pop()
-      user_two = usersBucket.pop()
+      user_one = usersBucket.shift()
+      user_two = usersBucket.shift()
 
       io.to(user_one.socketID).emit('match', user_two);
       io.to(user_two.socketID).emit('match', user_one);
