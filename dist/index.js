@@ -52,7 +52,7 @@ var insideOfRange = (value, range) => {
 };
 
 // src/index.ts
-var langsBucket;
+var langsBucket = {};
 var removeFromBucket = (id, lang) => {
   const index = langsBucket[lang].findIndex((obj) => obj.id === id);
   if (index === -1)
@@ -60,38 +60,39 @@ var removeFromBucket = (id, lang) => {
   langsBucket[lang].splice(index, 1);
 };
 server_default.on("connection", (socket) => {
-  console.log("a user connected", socket.id);
   socket.once("add_user", (user) => {
     const { profilePicture, name, age, bio, authenticated, matchingConfig } = user;
-    console.log(langsBucket);
-    if (!langsBucket[`${matchingConfig?.lang}`])
-      langsBucket[`${matchingConfig?.lang}`] = [];
-    langsBucket[`${matchingConfig?.lang}`].push(
-      {
-        id: user.id,
-        user: {
-          name: name ?? "",
-          bio: bio ?? "",
-          age: age ?? 50,
-          profilePicture: profilePicture ?? "",
-          authenticated: authenticated ?? false,
-          matchingConfig: {
-            from: matchingConfig?.from ?? 50,
-            to: matchingConfig?.to ?? 50,
-            lang: matchingConfig?.lang ?? "noOne"
-          }
+    const userConection = {
+      id: socket.id,
+      user: {
+        name: name ?? "",
+        bio: bio ?? "",
+        age: age ?? 50,
+        profilePicture: profilePicture ?? "",
+        authenticated: authenticated ?? false,
+        matchingConfig: {
+          from: matchingConfig?.from ?? 50,
+          to: matchingConfig?.to ?? 50,
+          lang: matchingConfig?.lang ?? "noOne"
         }
       }
-    );
+    };
+    console.log("a user connected", userConection);
+    const { lang, from, to } = userConection.user.matchingConfig;
+    if (!langsBucket[`${lang}`])
+      langsBucket[`${lang}`] = [];
+    langsBucket[`${lang}`].push(userConection);
+    console.log(langsBucket);
     try {
-      const filtered = langsBucket[`${matchingConfig?.lang}`].filter(
-        (person) => insideOfRange(age, [matchingConfig?.from, matchingConfig?.to]) && insideOfRange(age, [person.user.matchingConfig.to, person.user.matchingConfig.from])
+      const filtered = langsBucket[`${lang}`].filter(
+        (person) => insideOfRange(userConection.user.age, [from, to]) && insideOfRange(userConection.user.age, [person.user.matchingConfig.to, person.user.matchingConfig.from]) && person.id !== userConection.id
       );
+      console.log(filtered);
       if (!!filtered[0]) {
         removeFromBucket(filtered[0].id, filtered[0].user.matchingConfig.lang);
-        removeFromBucket(socket.id, user.matchingConfig.lang);
-        server_default.to(filtered[0].id).emit("match", user);
-        server_default.to(user.id).emit("match", filtered[0]);
+        removeFromBucket(socket.id, userConection.user.matchingConfig.lang);
+        server_default.to(filtered[0].id).emit("match", userConection.user);
+        server_default.to(userConection.id).emit("match", filtered[0].user);
       }
     } catch (e) {
       console.log(e);
