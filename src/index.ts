@@ -1,11 +1,9 @@
 import io from './server'
 
-import { insideOfRange } from './utils'
-import { UserConnectionType, UserType } from './types'
+import { defaultUser, insideOfRange } from './utils'
+import { langsBucketType, UserSocketType, UserType, genderValuesType } from './types'
 
-let langsBucket: {
-  [k: string]: Array<UserConnectionType>
-} = {}
+let langsBucket: langsBucketType = {}
 
 const removeFromBucket = (id: number, lang: string) => {
   const index = langsBucket[lang].findIndex(obj => obj.id === id);
@@ -13,51 +11,57 @@ const removeFromBucket = (id: number, lang: string) => {
   langsBucket[lang].splice(index, 1);
 }
 
+const getGender = (gender: genderValuesType) => {
+  if(gender === 0) return 'woman'
+  if(gender === 1) return 'men'
+  if(gender === 2) return 'trans'
+}
+
 io.on('connection', (socket: any) => {
 
-  socket.once('add_user', (user: UserType & {id: any}) => {
+  socket.once('add_user', (user: UserType) => {
 
-    const { profilePicture, name, age, bio, authenticated, matchingConfig } = user;
+    if(!user?.uid) return
+    console.log(`a user connected: ${user.age}y ${getGender(user.gender)} that search for ${user.matchingConfig.genders.map(g => getGender(g)).join(';')} with age ${user.matchingConfig.from} - ${user.matchingConfig.to}`);
 
-    const userConection = {
+    let userConection: UserSocketType;
+
+    userConection = {
       id: socket.id,
       user: {
-        name: name ?? '',
-        bio: bio ?? '',
-        age: age ?? 50,
-        profilePicture: profilePicture ?? '',
-        authenticated: authenticated ?? false,
+        ...defaultUser.user,
+        ...user,
         matchingConfig: {
-          from: matchingConfig?.from ?? 50,
-          to: matchingConfig?.to ?? 50,
-          lang: matchingConfig?.lang ?? 'noOne'
+          ...user.matchingConfig
         }
       }
     }
 
-    console.log('a user connected', userConection);
+    console.log(userConection)
 
-    const {lang, from, to} = userConection.user.matchingConfig
+    const {lang, from, to} = userConection.user.matchingConfig;
 
     if (!langsBucket[`${lang}`]) langsBucket[`${lang}`] = [];
 
     langsBucket[`${lang}`].push(userConection);
 
-    console.log(langsBucket);
-
     try {
-      const filtered = langsBucket[`${lang}`].filter(
+      let filtered = langsBucket[`${lang}`].filter( p => p.id !== userConection.id )
+      filtered = filtered.filter(
         person =>
-          insideOfRange(userConection.user.age, [from, to])
+          insideOfRange(person.user.age, [from, to])
           &&
-          insideOfRange(userConection.user.age, [person.user.matchingConfig.to, person.user.matchingConfig.from])
-          &&
-          person.id !== userConection.id
+          insideOfRange(userConection.user.age, [person.user.matchingConfig.from, person.user.matchingConfig.to])
       )
-      console.log(filtered);
+      filtered = filtered.filter(
+        person =>
+          person.user.matchingConfig.genders.includes(userConection.user.gender)
+          &&
+          userConection.user.matchingConfig.genders.includes(person.user.gender)
+      )
       if(!!filtered[0]){
         removeFromBucket(filtered[0].id, filtered[0].user.matchingConfig.lang)
-        removeFromBucket(socket.id, userConection.user.matchingConfig.lang)
+        removeFromBucket(userConection.id, userConection.user.matchingConfig.lang)
         io.to(filtered[0].id).emit('match', userConection.user);
         io.to(userConection.id).emit('match', filtered[0].user);
       }
