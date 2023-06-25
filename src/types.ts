@@ -1,19 +1,16 @@
-export type genderValuesType = 0 | 1 | 2 | 3 | 4 | undefined
-
 export interface UserType {
   name: string
   bio: string
   age: number
   uid: string
-  gender: genderValuesType
+  gender: string
   profilePicture: string
   authenticated: boolean
-  lastPerfilEdit?: Date
   matchingConfig: {
     from: number
     to: number
     lang: string
-    genders: Array<genderValuesType>
+    genders: string[]
   }
 }
 

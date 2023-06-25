@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../src/types.ts"],
+  "sourcesContent": ["export interface UserType {\n  name: string\n  bio: string\n  age: number\n  uid: string\n  gender: string\n  profilePicture: string\n  authenticated: boolean\n  matchingConfig: {\n    from: number\n    to: number\n    lang: string\n    genders: string[]\n  }\n}\n\nexport interface UserSocketType {\n  user: UserType,\n  id: any\n}\n\nexport interface langsBucketType {\n  [k: string]: Array<UserSocketType>\n}\n"],
+  "mappings": ";;;;;;;;;;;;;;AAAA;AAAA;",
+  "names": []
+}

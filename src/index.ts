@@ -1,79 +1,83 @@
 import io from './server'
 
-import { defaultUser, insideOfRange } from './utils'
-import { langsBucketType, UserSocketType, UserType, genderValuesType } from './types'
+import { langsBucketType, UserSocketType, UserType } from './types'
+import { insideOfRange } from './utils'
 
 let langsBucket: langsBucketType = {}
 
-const removeFromBucket = (id: number, lang: string) => {
-  const index = langsBucket[lang].findIndex(obj => obj.id === id);
-  if (index === -1) return;
-  langsBucket[lang].splice(index, 1);
-}
+const removeFromBucket = (id: string, lang?: string) => {
+  if (lang) {
+    const index = langsBucket[lang].findIndex(obj => obj.id === id);
+    if (index === -1) return;
+    langsBucket[lang].splice(index, 1);
+  } else {
+    // Remover o usuário de todas as linguagens no bucket
+    Object.values(langsBucket).forEach(lang => {
+      const index = lang.findIndex(obj => obj.id === id);
+      if (index !== -1) {
+        lang.splice(index, 1);
+      }
+    });
+  }
+};
 
-const getGender = (gender: genderValuesType) => {
-  if(gender === 0) return 'woman'
-  if(gender === 1) return 'men'
-  if(gender === 2) return 'trans'
+
+const onUserAdd = (user: UserType, socketId: string) => {
+
+  console.log('init user add')
+  
+  const lang = user.matchingConfig.lang
+  const {from, to} = user.matchingConfig
+  
+  langsBucket[`${lang}`].push({id: socketId, user})
+
+  const filteredLang = langsBucket[`${lang}`].filter(p => p.user.uid !== user.uid)
+  
+  const filteredAge = filteredLang.filter(p => {
+    const f = p.user.matchingConfig.from;
+    const t = p.user.matchingConfig.to;
+    return insideOfRange(p.user.age, [from, to]) && insideOfRange(user.age, [f, t])
+  })
+
+  const filteredGender = filteredAge.filter(p => {
+    console.log(p.user.matchingConfig.genders, p.user.gender)
+    console.log(user.matchingConfig.genders, user.gender)
+    if(p.user.matchingConfig.genders.includes(user.gender)){
+      if(user.matchingConfig.genders.includes(p.user.gender)){
+        return true
+      }
+    }
+    return false
+  })
+
+  console.log('filterde gender', filteredGender)
+
+  if(!!filteredGender[0]){
+    removeFromBucket(filteredGender[0].id, lang);
+    removeFromBucket(socketId, lang);
+    io.to(filteredGender[0].id).emit('match', user);
+    io.to(socketId).emit('match', filteredGender[0].user);
+  }
 }
 
 io.on('connection', (socket: any) => {
 
   socket.once('add_user', (user: UserType) => {
-
-    if(!user?.uid) return
-    console.log(`a user connected: ${user.age}y ${getGender(user.gender)} that search for ${user.matchingConfig.genders.map(g => getGender(g)).join(';')} with age ${user.matchingConfig.from} - ${user.matchingConfig.to}`);
-
-    let userConection: UserSocketType;
-
-    userConection = {
-      id: socket.id,
-      user: {
-        ...defaultUser.user,
-        ...user,
-        matchingConfig: {
-          ...user.matchingConfig
-        }
-      }
-    }
-
-    console.log(userConection)
-
-    const {lang, from, to} = userConection.user.matchingConfig;
-
-    if (!langsBucket[`${lang}`]) langsBucket[`${lang}`] = [];
-
-    langsBucket[`${lang}`].push(userConection);
-
-    try {
-      let filtered = langsBucket[`${lang}`].filter( p => p.id !== userConection.id )
-      filtered = filtered.filter(
-        person =>
-          insideOfRange(person.user.age, [from, to])
-          &&
-          insideOfRange(userConection.user.age, [person.user.matchingConfig.from, person.user.matchingConfig.to])
-      )
-      filtered = filtered.filter(
-        person =>
-          person.user.matchingConfig.genders.includes(userConection.user.gender)
-          &&
-          userConection.user.matchingConfig.genders.includes(person.user.gender)
-      )
-      if(!!filtered[0]){
-        removeFromBucket(filtered[0].id, filtered[0].user.matchingConfig.lang)
-        removeFromBucket(userConection.id, userConection.user.matchingConfig.lang)
-        io.to(filtered[0].id).emit('match', userConection.user);
-        io.to(userConection.id).emit('match', filtered[0].user);
-      }
-    }
-    catch (e) { console.log(e) }
-
+    if(!user?.uid || user?.age < 18 || !user?.matchingConfig.lang) return;
+    if(!langsBucket[user?.matchingConfig.lang]) langsBucket[user?.matchingConfig.lang] = [];
+    console.log(`
+    new user: 
+    socket id: ${socket.id}
+    firebase uid: ${user.uid}
+    `);
+    onUserAdd(user, socket.id);
+    console.log(user);
   })
 
   socket.on("disconnect", (reason: any) => {
-    console.log("a user disconnect", socket.id);
-    for (const lang of Object.keys(langsBucket)) {
-      removeFromBucket(socket.id, lang);
-    }
+    console.log(`
+    user exist: ${socket.id}
+    `);
+    removeFromBucket(socket.id);
   })
 });

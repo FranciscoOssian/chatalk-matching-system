@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../src/utils.ts"],
+  "sourcesContent": ["import { UserSocketType } from \"./types\";\n\nexport const insideOfRange = (value: number, range: Array<number>) => {\n  if(value >= range[0] && value <= range[1]) return true;\n  else return false;\n}\n\nexport const defaultUser: UserSocketType = {\n  id: '',\n  user: {\n    name: '',\n    bio: '',\n    age: 50,\n    profilePicture: '',\n    uid: '',\n    gender: undefined,\n    authenticated: false,\n    matchingConfig: {\n      from: 50,\n      to: 50,\n      lang: 'noOne',\n      genders: [undefined],\n    }\n  }\n}\n"],
+  "mappings": ";;;;;;;;;;;;;;;;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;AAEO,MAAM,gBAAgB,CAAC,OAAe,UAAyB;AACpE,MAAG,SAAS,MAAM,MAAM,SAAS,MAAM;AAAI,WAAO;AAAA;AAC7C,WAAO;AACd;AAEO,MAAM,cAA8B;AAAA,EACzC,IAAI;AAAA,EACJ,MAAM;AAAA,IACJ,MAAM;AAAA,IACN,KAAK;AAAA,IACL,KAAK;AAAA,IACL,gBAAgB;AAAA,IAChB,KAAK;AAAA,IACL,QAAQ;AAAA,IACR,eAAe;AAAA,IACf,gBAAgB;AAAA,MACd,MAAM;AAAA,MACN,IAAI;AAAA,MACJ,MAAM;AAAA,MACN,SAAS,CAAC,MAAS;AAAA,IACrB;AAAA,EACF;AACF;",
+  "names": []
+}

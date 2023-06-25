@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../src/server.ts"],
+  "sourcesContent": ["import express from 'express';\nconst app = express();\nimport http from 'http';\nconst server = http.createServer(app);\nimport { Server } from \"socket.io\";\nconst io = new Server(server, {\n  cors: {\n    origin: \"*\",\n    methods: [\"GET\", \"POST\", \"DELETE\"],\n    allowedHeaders: [\"my-custom-header\"],\n    credentials: true,\n  },\n  maxHttpBufferSize: 1e8\n});\n\nconst port = process.env.PORT || 8000\n\nserver.listen(port, () => {\n  console.log(`listening on *:${port}`);\n})\n\nexport default io;\n"],
+  "mappings": ";;;;;;;;;;;;;;;;;;;;;;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA,qBAAoB;AAEpB,kBAAiB;AAEjB,oBAAuB;AAHvB,MAAM,UAAM,eAAAA,SAAQ;AAEpB,MAAM,SAAS,YAAAC,QAAK,aAAa,GAAG;AAEpC,MAAM,KAAK,IAAI,qBAAO,QAAQ;AAAA,EAC5B,MAAM;AAAA,IACJ,QAAQ;AAAA,IACR,SAAS,CAAC,OAAO,QAAQ,QAAQ;AAAA,IACjC,gBAAgB,CAAC,kBAAkB;AAAA,IACnC,aAAa;AAAA,EACf;AAAA,EACA,mBAAmB;AACrB,CAAC;AAED,MAAM,OAAO,QAAQ,IAAI,QAAQ;AAEjC,OAAO,OAAO,MAAM,MAAM;AACxB,UAAQ,IAAI,kBAAkB,MAAM;AACtC,CAAC;AAED,IAAO,iBAAQ;",
+  "names": ["express", "http"]
+}
