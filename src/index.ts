@@ -64,7 +64,11 @@ io.on('connection', (socket: any) => {
 
   socket.once('add_user', (user: UserType) => {
     if(!user?.uid || user?.age < 18) return;
-    if(!user?.matchingConfig?.lang) user.matchingConfig['lang'] = 'none'
+    if(!user?.matchingConfig) return;
+    if(!user?.matchingConfig?.from) return;
+    if(!user?.matchingConfig?.to) return;
+    if(!user?.matchingConfig?.genders) return;
+    if(!user?.matchingConfig?.lang) return;
     if(!langsBucket[user?.matchingConfig.lang]) langsBucket[user?.matchingConfig.lang] = [];
     console.log(`
     new user: 
